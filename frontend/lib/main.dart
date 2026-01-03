@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'bloc/game_bloc.dart';
+import 'networking/api/game_api.dart';
 import 'screens/game_screen.dart';
 
 void main() {
@@ -20,7 +23,11 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const GameScreen(),
+      home: BlocProvider(
+        create: (context) =>
+            GameBloc(GameApi())..add(GameStarted()),
+        child: const GameScreen(),
+      ),
     );
   }
 }
