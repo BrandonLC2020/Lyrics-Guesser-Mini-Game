@@ -1,10 +1,8 @@
-import random
-
 import httpx
 from fastapi import APIRouter, HTTPException
 from thefuzz import fuzz
 
-from app.core.config import SONG_DATABASE
+from app.core.deezer import get_random_song
 from app.core.security import create_game_token, decode_game_token
 from app.core.utils import mask_text
 from app.schemas.game import GuessRequest, GuessResult, NewRoundResponse
@@ -14,26 +12,35 @@ router = APIRouter(prefix="/game", tags=["game"])
 
 @router.get("/new", response_model=NewRoundResponse)
 async def start_new_round() -> NewRoundResponse:
-    # 1. Pick a random song
-    selection = random.choice(SONG_DATABASE)
-    artist = selection["artist"]
-    title = selection["title"]
+    # 1. Pick a random song and resolve lyrics with retries
+    clean_lyrics = ""
+    artist = ""
+    title = ""
 
-    # 2. Fetch Lyrics from Lyrics.ovh
-    # Using AsyncClient ensures the server doesn't freeze while waiting for lyrics
     async with httpx.AsyncClient() as client:
-        url = f"https://api.lyrics.ovh/v1/{artist}/{title}"
-        response = await client.get(url)
+        for _ in range(4):
+            selection = await get_random_song()
+            artist = selection["artist"]
+            title = selection["title"]
 
-        if response.status_code != 200:
-            print(f"Error fetching lyrics for {artist} - {title}")
-            raise HTTPException(status_code=503, detail="Could not fetch lyrics provider.")
+            url = f"https://api.lyrics.ovh/v1/{artist}/{title}"
+            response = await client.get(url)
 
-        data = response.json()
-        raw_lyrics = data.get("lyrics", "")
+            if response.status_code != 200:
+                continue
 
-        # Cleanup: API sometimes returns "Paroles de la chanson..." headers
-        clean_lyrics = raw_lyrics.replace(f"Paroles de la chanson {title}", "").strip()
+            data = response.json()
+            raw_lyrics = data.get("lyrics", "")
+            if not raw_lyrics:
+                continue
+
+            # Cleanup: API sometimes returns "Paroles de la chanson..." headers
+            clean_lyrics = raw_lyrics.replace(f"Paroles de la chanson {title}", "").strip()
+            if clean_lyrics:
+                break
+
+    if not clean_lyrics:
+        raise HTTPException(status_code=503, detail="Could not fetch lyrics provider.")
 
     # 3. Mask the lyrics
     masked = mask_text(clean_lyrics, mask_ratio=0.4)
