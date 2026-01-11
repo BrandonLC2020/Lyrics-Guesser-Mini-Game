@@ -1,5 +1,6 @@
 import random
 
+
 def mask_text(text: str, mask_ratio: float = 0.4) -> str:
     """
     Replaces random words with asterisks, keeping punctuation/newlines.
@@ -7,7 +8,7 @@ def mask_text(text: str, mask_ratio: float = 0.4) -> str:
     """
     words = text.split()
     masked_output = []
-    
+
     for word in words:
         # Don't mask very short words (<= 2 chars)
         # Randomly mask words based on the ratio
@@ -15,5 +16,5 @@ def mask_text(text: str, mask_ratio: float = 0.4) -> str:
             masked_output.append("*" * len(word))
         else:
             masked_output.append(word)
-            
+
     return " ".join(masked_output)

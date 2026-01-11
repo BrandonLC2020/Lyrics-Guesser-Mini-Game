@@ -2,7 +2,7 @@ import os
 
 # In a real production app, you would load this from os.environ
 # e.g., SECRET_KEY = os.getenv("SECRET_KEY", "fallback_dev_key")
-SECRET_KEY = "super_secret_game_key_for_signing_tokens"
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_game_key_for_signing_tokens")
 
 # Hardcoded list to ensure valid Artist/Title pairs for Lyrics.ovh
 SONG_DATABASE = [
