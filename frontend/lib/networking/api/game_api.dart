@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../dto/new_round_response.dart';
 import '../dto/guess_result.dart';
+import '../dto/queue_response.dart';
 
 class GameApi {
   // Update this to match your backend URL
@@ -16,6 +17,18 @@ class GameApi {
       return NewRoundResponse.fromJson(json.decode(response.body));
     } else {
       throw Exception('Failed to start new round: ${response.statusCode}');
+    }
+  }
+
+  Future<QueueResponse> fetchRoundQueue({int count = 7}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/game/queue?count=$count'),
+    );
+
+    if (response.statusCode == 200) {
+      return QueueResponse.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to fetch queue: ${response.statusCode}');
     }
   }
 
@@ -36,4 +49,3 @@ class GameApi {
     }
   }
 }
-

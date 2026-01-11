@@ -7,6 +7,10 @@ class NewRoundResponse(BaseModel):
     hint_length: int      # Length of the artist name (e.g. 5 for "Adele")
 
 
+class QueueResponse(BaseModel):
+    rounds: list[NewRoundResponse]
+
+
 class GuessRequest(BaseModel):
     game_token: str
     user_guess: str

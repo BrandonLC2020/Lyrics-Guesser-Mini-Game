@@ -19,3 +19,7 @@ class GuessSubmitted extends GameEvent {
 }
 
 class NewRoundStarted extends GameEvent {}
+
+class QueueRefillRequested extends GameEvent {
+  const QueueRefillRequested();
+}

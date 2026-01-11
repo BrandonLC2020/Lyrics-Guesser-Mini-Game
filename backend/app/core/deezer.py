@@ -13,22 +13,40 @@ _recent_track_set: set[str] = set()
 logger = logging.getLogger(__name__)
 
 
-async def _get_data(client: httpx.AsyncClient, url: str) -> list[dict[str, Any]]:
+async def _get_payload(client: httpx.AsyncClient, url: str) -> dict[str, Any] | None:
     logger.info("Deezer request: %s", url)
     try:
         response = await client.get(url)
     except httpx.HTTPError:
         logger.warning("Deezer request failed: %s", url)
-        return []
+        return None
 
     if response.status_code != 200:
         logger.info("Deezer response status %s for %s", response.status_code, url)
-        return []
+        return None
 
     payload = response.json()
+    if isinstance(payload, dict):
+        return payload
+    return None
+
+
+async def _get_data(client: httpx.AsyncClient, url: str) -> list[dict[str, Any]]:
+    payload = await _get_payload(client, url)
+    if not payload:
+        return []
     data = payload.get("data", [])
     if isinstance(data, list):
         return data
+    return []
+
+
+def _extract_chart_tracks(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    tracks = payload.get("tracks", {})
+    if isinstance(tracks, dict):
+        data = tracks.get("data", [])
+        if isinstance(data, list):
+            return data
     return []
 
 
@@ -98,26 +116,82 @@ async def _get_song_from_genre_chart(client: httpx.AsyncClient) -> dict[str, str
     return _pick_track(tracks)
 
 
+async def _get_song_from_global_chart(client: httpx.AsyncClient) -> dict[str, str] | None:
+    payload = await _get_payload(client, "https://api.deezer.com/chart?limit=50")
+    if not payload:
+        return None
+    tracks = _extract_chart_tracks(payload)
+    return _pick_track(tracks)
+
+
+async def _get_song_from_editorial_chart(client: httpx.AsyncClient) -> dict[str, str] | None:
+    editorials = await _get_data(client, "https://api.deezer.com/editorial")
+    if not editorials:
+        return None
+
+    valid_editorials = [editorial for editorial in editorials if editorial.get("id") not in (None, 0)]
+    if not valid_editorials:
+        return None
+
+    editorial_id = random.choice(valid_editorials).get("id")
+    if not editorial_id:
+        return None
+    logger.info("Deezer editorial selected: %s", editorial_id)
+
+    payload = await _get_payload(client, f"https://api.deezer.com/editorial/{editorial_id}/charts")
+    if not payload:
+        return None
+    tracks = _extract_chart_tracks(payload)
+    return _pick_track(tracks)
+
+
+async def _get_song_from_artist_top(client: httpx.AsyncClient) -> dict[str, str] | None:
+    payload = await _get_payload(client, "https://api.deezer.com/chart?limit=50")
+    if not payload:
+        return None
+    chart_tracks = _extract_chart_tracks(payload)
+    if not chart_tracks:
+        return None
+
+    artist = random.choice(chart_tracks).get("artist", {})
+    artist_id = artist.get("id")
+    if not artist_id:
+        return None
+    logger.info("Deezer artist selected for top tracks: %s", artist_id)
+
+    top_tracks = await _get_data(client, f"https://api.deezer.com/artist/{artist_id}/top?limit=50")
+    return _pick_track(top_tracks)
+
+
 async def get_random_song(max_attempts: int = 6) -> dict[str, str]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         attempts = 0
-        fetchers = [_get_song_from_radio, _get_song_from_genre_chart]
+        fetchers = [
+            (_get_song_from_global_chart, 10),
+            (_get_song_from_editorial_chart, 40),
+            (_get_song_from_artist_top, 20),
+            (_get_song_from_genre_chart, 15),
+            (_get_song_from_radio, 15),
+        ]
 
         while attempts < max_attempts:
             attempts += 1
             logger.info("Deezer fetch attempt %s/%s", attempts, max_attempts)
-            random.shuffle(fetchers)
-            for fetcher in fetchers:
-                logger.info("Deezer fetcher: %s", fetcher.__name__)
-                song = await fetcher(client)
-                if not song:
-                    continue
-                if _is_recent(song):
-                    logger.info("Deezer track skipped (recent): %s - %s", song["artist"], song["title"])
-                    continue
-                _mark_recent(song)
-                logger.info("Deezer track selected: %s - %s", song["artist"], song["title"])
-                return song
+            fetcher = random.choices(
+                [fetcher for fetcher, _ in fetchers],
+                weights=[weight for _, weight in fetchers],
+                k=1,
+            )[0]
+            logger.info("Deezer fetcher: %s", fetcher.__name__)
+            song = await fetcher(client)
+            if not song:
+                continue
+            if _is_recent(song):
+                logger.info("Deezer track skipped (recent): %s - %s", song["artist"], song["title"])
+                continue
+            _mark_recent(song)
+            logger.info("Deezer track selected: %s - %s", song["artist"], song["title"])
+            return song
 
     fallback_pool = [song for song in SONG_DATABASE if not _is_recent(song)]
     if not fallback_pool:
