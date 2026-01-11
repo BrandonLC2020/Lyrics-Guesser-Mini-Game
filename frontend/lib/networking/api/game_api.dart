@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../models/game_mode.dart';
 import '../dto/new_round_response.dart';
 import '../dto/guess_result.dart';
 import '../dto/queue_response.dart';
@@ -8,9 +9,14 @@ class GameApi {
   // Update this to match your backend URL
   static const String baseUrl = 'http://localhost:8000';
 
-  Future<NewRoundResponse> startNewRound() async {
+  Future<NewRoundResponse> startNewRound({
+    required GameMode mode,
+    required GameDifficulty difficulty,
+  }) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/api/game/new'),
+      Uri.parse(
+        '$baseUrl/api/game/new?mode=${mode.apiValue}&difficulty=${difficulty.apiValue}',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -20,9 +26,15 @@ class GameApi {
     }
   }
 
-  Future<QueueResponse> fetchRoundQueue({int count = 7}) async {
+  Future<QueueResponse> fetchRoundQueue({
+    int count = 7,
+    required GameMode mode,
+    required GameDifficulty difficulty,
+  }) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/api/game/queue?count=$count'),
+      Uri.parse(
+        '$baseUrl/api/game/queue?count=$count&mode=${mode.apiValue}&difficulty=${difficulty.apiValue}',
+      ),
     );
 
     if (response.statusCode == 200) {
@@ -32,7 +44,7 @@ class GameApi {
     }
   }
 
-  Future<GuessResult> submitGuess(String gameToken, String userGuess) async {
+  Future<GuessResult> submitGuess(String gameToken, Object userGuess) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/game/submit'),
       headers: {'Content-Type': 'application/json'},

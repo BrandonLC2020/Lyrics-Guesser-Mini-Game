@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../bloc/game_bloc.dart';
+import '../models/game_mode.dart';
 import '../networking/dto/new_round_response.dart';
 import '../networking/dto/guess_result.dart';
+import 'loading_view.dart';
 
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
@@ -37,8 +40,11 @@ class GameScreen extends StatelessWidget {
             builder: (context, state) {
               if (state is GameLoading &&
                   (state is! GameLoaded && state is! GameGuessSubmitted)) {
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+                return LoadingView(
+                  status: _loadingStatus(
+                    state.selectedMode,
+                    state.selectedDifficulty,
+                  ),
                 );
               }
 
@@ -48,11 +54,17 @@ class GameScreen extends StatelessWidget {
 
               if (state is GameGuessSubmitted) {
                 return _buildResultView(
-                    context, state.result, state.round);
+                  context,
+                  state.result,
+                  state.round,
+                );
               }
 
-              return const Center(
-                child: CircularProgressIndicator(color: Colors.white),
+              return LoadingView(
+                status: _loadingStatus(
+                  state.selectedMode,
+                  state.selectedDifficulty,
+                ),
               );
             },
           ),
@@ -61,21 +73,45 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGameView(BuildContext context, NewRoundResponse round) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _Header(),
-          const SizedBox(height: 32),
-          _LyricsCard(lyrics: round.maskedLyrics),
-          const SizedBox(height: 24),
-          _Hint(hintLength: round.hintLength),
-          const SizedBox(height: 24),
-          const _GuessInputSection(),
-        ],
-      ),
+  Widget _buildGameView(
+    BuildContext context,
+    NewRoundResponse round,
+  ) {
+    final mode = parseGameMode(round.roundType);
+    final hintLabel = mode == GameMode.track
+        ? 'Hint: Track title has ${round.hintLength} letters'
+        : 'Hint: Artist name has ${round.hintLength} letters';
+    final leftCard = mode == GameMode.lyrics
+        ? _LyricsFillCard(
+            round: round,
+            onSubmit: (guesses) => context
+                .read<GameBloc>()
+                .add(GuessSubmitted(guesses)),
+          )
+        : _LyricsCard(lyrics: round.maskedLyrics);
+
+    final sideWidgets = <Widget>[
+      const SizedBox(height: 24),
+      if (mode != GameMode.lyrics) _Hint(text: hintLabel),
+      if (mode != GameMode.lyrics) const SizedBox(height: 24),
+      if (mode != GameMode.lyrics)
+        _GuessInputSection(
+          prompt: mode == GameMode.track
+              ? 'What is the track title?'
+              : 'Who is the artist?',
+          hint: mode == GameMode.track
+              ? 'Enter track title...'
+              : 'Enter artist name...',
+          onSubmit: (guess) =>
+              context.read<GameBloc>().add(GuessSubmitted(guess)),
+        ),
+    ];
+
+    return _buildResponsiveLayout(
+      context,
+      header: const _Header(),
+      leftCard: leftCard,
+      sideWidgets: sideWidgets,
     );
   }
 
@@ -84,41 +120,118 @@ class GameScreen extends StatelessWidget {
     GuessResult result,
     NewRoundResponse round,
   ) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _Header(),
-          const SizedBox(height: 32),
-          _LyricsCard(lyrics: round.maskedLyrics),
-          const SizedBox(height: 24),
-          _ResultCard(result: result),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () =>
-                context.read<GameBloc>().add(NewRoundStarted()),
-            icon: const Icon(Icons.refresh),
-            label: const Text(
-              'New Round',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.purple.shade400,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 4,
-            ),
+    final mode = parseGameMode(result.roundType);
+    final leftCard = _LyricsCard(lyrics: round.maskedLyrics);
+    final sideWidgets = <Widget>[
+      const SizedBox(height: 24),
+      _ResultCard(result: result, mode: mode),
+      const SizedBox(height: 24),
+      ElevatedButton.icon(
+        onPressed: () => context.read<GameBloc>().add(NewRoundStarted()),
+        icon: const Icon(Icons.refresh),
+        label: const Text(
+          'New Round',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.purple.shade400,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 4,
+        ),
       ),
+    ];
+
+    return _buildResponsiveLayout(
+      context,
+      header: const _Header(),
+      leftCard: leftCard,
+      sideWidgets: sideWidgets,
     );
+  }
+
+  Widget _buildResponsiveLayout(
+    BuildContext context, {
+    required Widget header,
+    required Widget leftCard,
+    required List<Widget> sideWidgets,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        final content = isWide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: leftCard,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          header,
+                          ...sideWidgets,
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    header,
+                    const SizedBox(height: 24),
+                    leftCard,
+                    ...sideWidgets,
+                  ],
+                ),
+              );
+
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: content,
+          ),
+        );
+      },
+    );
+  }
+
+  String _loadingStatus(GameMode mode, GameDifficulty difficulty) {
+    if (mode == GameMode.lyrics) {
+      return difficulty == GameDifficulty.hard
+          ? 'Obscuring the lyrics...'
+          : 'Warming up the lyric sheet...';
+    }
+    if (mode == GameMode.track) {
+      return difficulty == GameDifficulty.hard
+          ? 'Scrambling track hints...'
+          : 'Finding the track...';
+    }
+    return difficulty == GameDifficulty.hard
+        ? 'Masking the artist trail...'
+        : 'Finding the artist...';
   }
 }
 
@@ -127,10 +240,10 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
+    return Text(
       '🎵 Lyrics Guesser 🎵',
       textAlign: TextAlign.center,
-      style: TextStyle(
+      style: GoogleFonts.dmSerifDisplay(
         fontSize: 36,
         fontWeight: FontWeight.bold,
         color: Colors.white,
@@ -185,7 +298,7 @@ class _LyricsCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               lyrics,
-              style: const TextStyle(
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 18,
                 height: 1.6,
                 color: Colors.black87,
@@ -199,8 +312,8 @@ class _LyricsCard extends StatelessWidget {
 }
 
 class _Hint extends StatelessWidget {
-  final int hintLength;
-  const _Hint({required this.hintLength});
+  final String text;
+  const _Hint({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +330,7 @@ class _Hint extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Hint: Artist name has $hintLength letters',
+              text,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -232,7 +345,15 @@ class _Hint extends StatelessWidget {
 }
 
 class _GuessInputSection extends StatefulWidget {
-  const _GuessInputSection();
+  final String prompt;
+  final String hint;
+  final ValueChanged<String> onSubmit;
+
+  const _GuessInputSection({
+    required this.prompt,
+    required this.hint,
+    required this.onSubmit,
+  });
 
   @override
   State<_GuessInputSection> createState() => _GuessInputSectionState();
@@ -249,9 +370,7 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
 
   void _submitGuess() {
     if (_guessController.text.trim().isNotEmpty) {
-      context
-          .read<GameBloc>()
-          .add(GuessSubmitted(_guessController.text.trim()));
+      widget.onSubmit(_guessController.text.trim());
     }
   }
 
@@ -269,9 +388,9 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Who is the artist?',
-              style: TextStyle(
+            Text(
+              widget.prompt,
+              style: GoogleFonts.spaceGrotesk(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
@@ -281,7 +400,7 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
             TextField(
               controller: _guessController,
               decoration: InputDecoration(
-                hintText: 'Enter artist name...',
+                hintText: widget.hint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide:
@@ -297,7 +416,7 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
-              style: const TextStyle(fontSize: 18),
+              style: GoogleFonts.spaceGrotesk(fontSize: 18),
               textCapitalization: TextCapitalization.words,
               onSubmitted: (_) => _submitGuess(),
             ),
@@ -344,7 +463,8 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
 
 class _ResultCard extends StatelessWidget {
   final GuessResult result;
-  const _ResultCard({required this.result});
+  final GameMode mode;
+  const _ResultCard({required this.result, required this.mode});
 
   @override
   Widget build(BuildContext context) {
@@ -385,19 +505,50 @@ class _ResultCard extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            Text(
-              'Correct answer: ${result.correctArtist}',
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
+            if (mode == GameMode.lyrics)
+              Column(
+                children: [
+                  Text(
+                    'Correct words:',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 18,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: result.correctWords
+                        .map(
+                          (word) => Chip(
+                            label: Text(word),
+                            backgroundColor: Colors.white,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              )
+            else
+              Text(
+                'Correct answer: ${mode == GameMode.track ? result.correctTitle : result.correctArtist}',
+                style: GoogleFonts.spaceGrotesk(
+                  fontSize: 20,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 8),
             Text(
               'Match score: ${result.matchScore}%',
-              style: const TextStyle(fontSize: 16, color: Colors.black54),
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
             ),
           ],
         ),
@@ -406,3 +557,158 @@ class _ResultCard extends StatelessWidget {
   }
 }
 
+class _LyricsFillCard extends StatefulWidget {
+  final NewRoundResponse round;
+  final ValueChanged<List<String>> onSubmit;
+
+  const _LyricsFillCard({
+    required this.round,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_LyricsFillCard> createState() => _LyricsFillCardState();
+}
+
+class _LyricsFillCardState extends State<_LyricsFillCard> {
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    for (final blank in widget.round.blanksMetadata) {
+      _controllers[blank.key] = TextEditingController();
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  List<String> _collectGuesses() {
+    return widget.round.blanksMetadata
+        .map((blank) => _controllers[blank.key]?.text.trim() ?? '')
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canSubmit = widget.round.blanksMetadata.isNotEmpty;
+    final blankLookup = {
+      for (final blank in widget.round.blanksMetadata) blank.key: blank.length
+    };
+    final parts = <InlineSpan>[];
+    final pattern = RegExp(r'\[BLANK_(\d+)\]');
+    final text = widget.round.maskedLyrics;
+    int cursor = 0;
+
+    for (final match in pattern.allMatches(text)) {
+      if (match.start > cursor) {
+        parts.add(
+          TextSpan(
+            text: text.substring(cursor, match.start),
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 18,
+              height: 1.6,
+              color: Colors.black87,
+            ),
+          ),
+        );
+      }
+
+      final key = 'BLANK_${match.group(1)}';
+      final controller = _controllers[key];
+      final length = blankLookup[key] ?? 6;
+      parts.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: SizedBox(
+            width: 16.0 + length * 10,
+            child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                border: OutlineInputBorder(),
+              ),
+              style: GoogleFonts.spaceGrotesk(fontSize: 16),
+            ),
+          ),
+        ),
+      );
+      cursor = match.end;
+    }
+
+    if (cursor < text.length) {
+      parts.add(
+        TextSpan(
+          text: text.substring(cursor),
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            height: 1.6,
+            color: Colors.black87,
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.music_note,
+                  color: Colors.orange.shade400,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Fill the lyrics',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            RichText(text: TextSpan(children: parts)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: canSubmit ? () => widget.onSubmit(_collectGuesses()) : null,
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('Submit Words'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange.shade400,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: GoogleFonts.spaceGrotesk(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
