@@ -1,6 +1,7 @@
 import logging
 import random
 from collections import deque
+from typing import Any
 
 from app.core.config import SONG_DATABASE
 from app.core.deezer import get_random_song as get_deezer_song
@@ -12,17 +13,17 @@ _recent_track_set: set[str] = set()
 logger = logging.getLogger(__name__)
 
 
-def _track_key(song: dict[str, str]) -> str:
+def _track_key(song: dict[str, Any]) -> str:
     artist = song.get("artist", "").strip().lower()
     title = song.get("title", "").strip().lower()
     return f"{artist}::{title}"
 
 
-def _is_recent(song: dict[str, str]) -> bool:
+def _is_recent(song: dict[str, Any]) -> bool:
     return _track_key(song) in _recent_track_set
 
 
-def _mark_recent(song: dict[str, str]) -> None:
+def _mark_recent(song: dict[str, Any]) -> None:
     key = _track_key(song)
     if key in _recent_track_set:
         return
@@ -33,7 +34,7 @@ def _mark_recent(song: dict[str, str]) -> None:
     _recent_track_set.add(key)
 
 
-async def get_random_song(max_attempts: int = 6) -> dict[str, str]:
+async def get_random_song(max_attempts: int = 6) -> dict[str, Any]:
     providers = [
         (get_deezer_song, 70),
         (get_itunes_song, 30),

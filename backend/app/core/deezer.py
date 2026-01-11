@@ -50,30 +50,31 @@ def _extract_chart_tracks(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
-def _pick_track(tracks: list[dict[str, Any]]) -> dict[str, str] | None:
+def _pick_track(tracks: list[dict[str, Any]]) -> dict[str, Any] | None:
     if not tracks:
         return None
 
     selection = random.choice(tracks)
     artist = selection.get("artist", {}).get("name")
     title = selection.get("title")
+    album_cover = selection.get("album", {}).get("cover_medium")
     if not artist or not title:
         return None
     logger.info("Deezer candidate picked: %s - %s", artist, title)
-    return {"artist": artist, "title": title}
+    return {"artist": artist, "title": title, "album_cover": album_cover}
 
 
-def _track_key(song: dict[str, str]) -> str:
+def _track_key(song: dict[str, Any]) -> str:
     artist = song.get("artist", "").strip().lower()
     title = song.get("title", "").strip().lower()
     return f"{artist}::{title}"
 
 
-def _is_recent(song: dict[str, str]) -> bool:
+def _is_recent(song: dict[str, Any]) -> bool:
     return _track_key(song) in _recent_track_set
 
 
-def _mark_recent(song: dict[str, str]) -> None:
+def _mark_recent(song: dict[str, Any]) -> None:
     key = _track_key(song)
     if key in _recent_track_set:
         return
@@ -84,7 +85,7 @@ def _mark_recent(song: dict[str, str]) -> None:
     _recent_track_set.add(key)
 
 
-async def _get_song_from_radio(client: httpx.AsyncClient) -> dict[str, str] | None:
+async def _get_song_from_radio(client: httpx.AsyncClient) -> dict[str, Any] | None:
     radios = await _get_data(client, "https://api.deezer.com/radio")
     if not radios:
         return None
@@ -98,7 +99,7 @@ async def _get_song_from_radio(client: httpx.AsyncClient) -> dict[str, str] | No
     return _pick_track(tracks)
 
 
-async def _get_song_from_genre_chart(client: httpx.AsyncClient) -> dict[str, str] | None:
+async def _get_song_from_genre_chart(client: httpx.AsyncClient) -> dict[str, Any] | None:
     genres = await _get_data(client, "https://api.deezer.com/genre")
     if not genres:
         return None
@@ -116,7 +117,7 @@ async def _get_song_from_genre_chart(client: httpx.AsyncClient) -> dict[str, str
     return _pick_track(tracks)
 
 
-async def _get_song_from_global_chart(client: httpx.AsyncClient) -> dict[str, str] | None:
+async def _get_song_from_global_chart(client: httpx.AsyncClient) -> dict[str, Any] | None:
     payload = await _get_payload(client, "https://api.deezer.com/chart?limit=50")
     if not payload:
         return None
@@ -124,7 +125,7 @@ async def _get_song_from_global_chart(client: httpx.AsyncClient) -> dict[str, st
     return _pick_track(tracks)
 
 
-async def _get_song_from_editorial_chart(client: httpx.AsyncClient) -> dict[str, str] | None:
+async def _get_song_from_editorial_chart(client: httpx.AsyncClient) -> dict[str, Any] | None:
     editorials = await _get_data(client, "https://api.deezer.com/editorial")
     if not editorials:
         return None
@@ -145,7 +146,7 @@ async def _get_song_from_editorial_chart(client: httpx.AsyncClient) -> dict[str,
     return _pick_track(tracks)
 
 
-async def _get_song_from_artist_top(client: httpx.AsyncClient) -> dict[str, str] | None:
+async def _get_song_from_artist_top(client: httpx.AsyncClient) -> dict[str, Any] | None:
     payload = await _get_payload(client, "https://api.deezer.com/chart?limit=50")
     if not payload:
         return None
@@ -163,7 +164,7 @@ async def _get_song_from_artist_top(client: httpx.AsyncClient) -> dict[str, str]
     return _pick_track(top_tracks)
 
 
-async def get_random_song(max_attempts: int = 6) -> dict[str, str]:
+async def get_random_song(max_attempts: int = 6) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         attempts = 0
         fetchers = [

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,62 +15,94 @@ class GameScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.purple.shade400,
-              Colors.blue.shade400,
-              Colors.pink.shade300,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: BlocConsumer<GameBloc, GameState>(
-            listener: (context, state) {
-              if (state is GameError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: Colors.red,
+      body: BlocConsumer<GameBloc, GameState>(
+        listener: (context, state) {
+          if (state is GameError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          String? backgroundUrl;
+          if (state is GameLoaded) {
+            backgroundUrl = state.round.albumCoverUrl;
+          } else if (state is GameGuessSubmitted) {
+            backgroundUrl = state.round.albumCoverUrl;
+          }
+          final showBackgroundArt = state.backgroundArtEnabled &&
+              backgroundUrl != null &&
+              backgroundUrl.isNotEmpty;
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.purple.shade400,
+                      Colors.blue.shade400,
+                      Colors.pink.shade300,
+                    ],
                   ),
-                );
-              }
-            },
-            builder: (context, state) {
-              if (state is GameLoading &&
-                  (state is! GameLoaded && state is! GameGuessSubmitted)) {
-                return LoadingView(
-                  status: _loadingStatus(
-                    state.selectedMode,
-                    state.selectedDifficulty,
-                  ),
-                );
-              }
-
-              if (state is GameLoaded) {
-                return _buildGameView(context, state.round);
-              }
-
-              if (state is GameGuessSubmitted) {
-                return _buildResultView(
-                  context,
-                  state.result,
-                  state.round,
-                );
-              }
-
-              return LoadingView(
-                status: _loadingStatus(
-                  state.selectedMode,
-                  state.selectedDifficulty,
                 ),
-              );
-            },
-          ),
+              ),
+              if (showBackgroundArt) ...[
+                Image.network(
+                  backgroundUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                ),
+              ],
+              SafeArea(
+                child: _buildContent(context, state),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, GameState state) {
+    if (state is GameLoading &&
+        (state is! GameLoaded && state is! GameGuessSubmitted)) {
+      return LoadingView(
+        status: _loadingStatus(
+          state.selectedMode,
+          state.selectedDifficulty,
         ),
+      );
+    }
+
+    if (state is GameLoaded) {
+      return _buildGameView(context, state.round);
+    }
+
+    if (state is GameGuessSubmitted) {
+      return _buildResultView(
+        context,
+        state.result,
+        state.round,
+      );
+    }
+
+    return LoadingView(
+      status: _loadingStatus(
+        state.selectedMode,
+        state.selectedDifficulty,
       ),
     );
   }

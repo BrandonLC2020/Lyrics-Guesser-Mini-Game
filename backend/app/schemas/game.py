@@ -15,6 +15,7 @@ class NewRoundResponse(BaseModel):
     round_type: str       # artist, track, lyrics
     difficulty: str       # easy, hard
     blanks_metadata: list[BlankMetadata] = Field(default_factory=list)
+    album_cover_url: str | None = None  # URL to the album cover art
 
 
 class QueueResponse(BaseModel):

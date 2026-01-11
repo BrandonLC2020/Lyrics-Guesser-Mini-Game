@@ -28,12 +28,14 @@ async def _build_round(
     clean_lyrics = ""
     artist = ""
     title = ""
+    album_cover = None
 
     for _ in range(12):
         logger.info("Selecting a new track for lyrics lookup.")
         selection = await get_random_song()
         artist = selection["artist"]
         title = selection["title"]
+        album_cover = selection.get("album_cover")
 
         artist_path = quote(artist, safe="")
         title_path = quote(title, safe="")
@@ -132,6 +134,7 @@ async def _build_round(
         round_type=mode,
         difficulty=difficulty,
         blanks_metadata=blanks_metadata,
+        album_cover_url=album_cover,
     )
 
 

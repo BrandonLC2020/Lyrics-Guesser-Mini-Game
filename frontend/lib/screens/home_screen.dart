@@ -157,75 +157,23 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> _selectDifficulty(BuildContext context, GameMode mode) async {
     final palette = _HomePalette();
-    final selection = await showModalBottomSheet<GameDifficulty>(
+    final result = await showModalBottomSheet<_GameConfig>(
       context: context,
       backgroundColor: palette.sheetBackground,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Select difficulty',
-              style: GoogleFonts.dmSerifDisplay(
-                fontSize: 26,
-                color: palette.title,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Easy keeps the lyrics clearer. Hard hides more. Random mixes it up.',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 16,
-                color: palette.subtitle,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _DifficultyButton(
-                    label: 'Easy',
-                    icon: Icons.wb_sunny_outlined,
-                    color: palette.easyAccent,
-                    onTap: () => Navigator.pop(context, GameDifficulty.easy),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _DifficultyButton(
-                    label: 'Hard',
-                    icon: Icons.bolt_outlined,
-                    color: palette.hardAccent,
-                    onTap: () => Navigator.pop(context, GameDifficulty.hard),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _DifficultyButton(
-                    label: 'Random',
-                    icon: Icons.casino_outlined,
-                    color: palette.randomAccent,
-                    onTap: () => Navigator.pop(context, GameDifficulty.random),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      builder: (context) => _DifficultySheet(palette: palette),
     );
 
-    if (selection != null && context.mounted) {
-      _startGame(context, mode, selection);
+    if (result != null && context.mounted) {
+      _startGame(
+        context,
+        mode,
+        result.difficulty,
+        result.backgroundArtEnabled,
+      );
     }
   }
 
@@ -233,6 +181,7 @@ class HomeScreen extends StatelessWidget {
     BuildContext context,
     GameMode mode,
     GameDifficulty difficulty,
+    bool backgroundArtEnabled,
   ) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -241,6 +190,7 @@ class HomeScreen extends StatelessWidget {
             GameApi(),
             initialMode: mode,
             initialDifficulty: difficulty,
+            backgroundArtEnabled: backgroundArtEnabled,
           )
             ..add(
               GameModeSelected(
@@ -251,6 +201,119 @@ class HomeScreen extends StatelessWidget {
             ..add(GameStarted()),
           child: const GameScreen(),
         ),
+      ),
+    );
+  }
+}
+
+class _GameConfig {
+  final GameDifficulty difficulty;
+  final bool backgroundArtEnabled;
+  _GameConfig(this.difficulty, this.backgroundArtEnabled);
+}
+
+class _DifficultySheet extends StatefulWidget {
+  final _HomePalette palette;
+  const _DifficultySheet({required this.palette});
+
+  @override
+  State<_DifficultySheet> createState() => _DifficultySheetState();
+}
+
+class _DifficultySheetState extends State<_DifficultySheet> {
+  bool _backgroundArtEnabled = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select difficulty',
+            style: GoogleFonts.dmSerifDisplay(
+              fontSize: 26,
+              color: widget.palette.title,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Easy keeps the lyrics clearer. Hard hides more. Random mixes it up.',
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 16,
+              color: widget.palette.subtitle,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SwitchListTile(
+            value: _backgroundArtEnabled,
+            onChanged: (value) =>
+                setState(() => _backgroundArtEnabled = value),
+            title: Text(
+              'Background art hint',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: widget.palette.title,
+              ),
+            ),
+            subtitle: Text(
+              'Show blurred album art as a subtle clue.',
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 14,
+                color: widget.palette.subtitle,
+              ),
+            ),
+            activeColor: widget.palette.ctaText,
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _DifficultyButton(
+                  label: 'Easy',
+                  icon: Icons.wb_sunny_outlined,
+                  color: widget.palette.easyAccent,
+                  onTap: () => Navigator.pop(
+                    context,
+                    _GameConfig(GameDifficulty.easy, _backgroundArtEnabled),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _DifficultyButton(
+                  label: 'Hard',
+                  icon: Icons.bolt_outlined,
+                  color: widget.palette.hardAccent,
+                  onTap: () => Navigator.pop(
+                    context,
+                    _GameConfig(GameDifficulty.hard, _backgroundArtEnabled),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _DifficultyButton(
+                  label: 'Random',
+                  icon: Icons.casino_outlined,
+                  color: widget.palette.randomAccent,
+                  onTap: () => Navigator.pop(
+                    context,
+                    _GameConfig(GameDifficulty.random, _backgroundArtEnabled),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -5,6 +5,7 @@ class NewRoundResponse {
   final String roundType;
   final String difficulty;
   final List<BlankMetadata> blanksMetadata;
+  final String? albumCoverUrl;
 
   NewRoundResponse({
     required this.gameToken,
@@ -13,6 +14,7 @@ class NewRoundResponse {
     required this.roundType,
     required this.difficulty,
     required this.blanksMetadata,
+    this.albumCoverUrl,
   });
 
   factory NewRoundResponse.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class NewRoundResponse {
       blanksMetadata: blanksJson
           .map((item) => BlankMetadata.fromJson(item as Map<String, dynamic>))
           .toList(),
+      albumCoverUrl: json['album_cover_url'] as String?,
     );
   }
 }

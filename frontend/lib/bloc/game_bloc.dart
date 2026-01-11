@@ -15,17 +15,21 @@ class GameBloc extends Bloc<GameEvent, GameState> {
   bool _isRefilling = false;
   GameMode _selectedMode;
   GameDifficulty _selectedDifficulty;
+  final bool _backgroundArtEnabled;
 
   GameBloc(
     this._api, {
     GameMode initialMode = GameMode.artist,
     GameDifficulty initialDifficulty = GameDifficulty.easy,
+    bool backgroundArtEnabled = false,
   })  : _selectedMode = initialMode,
         _selectedDifficulty = initialDifficulty,
+        _backgroundArtEnabled = backgroundArtEnabled,
         super(
           GameInitial(
             selectedMode: initialMode,
             selectedDifficulty: initialDifficulty,
+            backgroundArtEnabled: backgroundArtEnabled,
           ),
         ) {
     on<GameStarted>(_onGameStarted);
@@ -46,6 +50,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       GameInitial(
         selectedMode: _selectedMode,
         selectedDifficulty: _selectedDifficulty,
+        backgroundArtEnabled: _backgroundArtEnabled,
       ),
     );
   }
@@ -58,6 +63,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       GameLoading(
         selectedMode: _selectedMode,
         selectedDifficulty: _selectedDifficulty,
+        backgroundArtEnabled: _backgroundArtEnabled,
       ),
     );
     try {
@@ -72,6 +78,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
             'Queue returned no rounds.',
             selectedMode: _selectedMode,
             selectedDifficulty: _selectedDifficulty,
+            backgroundArtEnabled: _backgroundArtEnabled,
           ),
         );
         return;
@@ -82,6 +89,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           _currentRound!,
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
       if (_queue.length <= 3) {
@@ -93,6 +101,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           'Error loading round: $e',
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     }
@@ -108,6 +117,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       GameLoading(
         selectedMode: _selectedMode,
         selectedDifficulty: _selectedDifficulty,
+        backgroundArtEnabled: _backgroundArtEnabled,
       ),
     );
     try {
@@ -121,6 +131,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           _currentRound!,
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     } catch (e) {
@@ -129,6 +140,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           'Error submitting guess: $e',
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     }
@@ -144,6 +156,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       GameLoading(
         selectedMode: _selectedMode,
         selectedDifficulty: _selectedDifficulty,
+        backgroundArtEnabled: _backgroundArtEnabled,
       ),
     );
     try {
@@ -160,6 +173,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           _currentRound!,
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     } catch (e) {
@@ -168,6 +182,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           'Error surrendering: $e',
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     }
@@ -181,6 +196,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       GameLoading(
         selectedMode: _selectedMode,
         selectedDifficulty: _selectedDifficulty,
+        backgroundArtEnabled: _backgroundArtEnabled,
       ),
     );
     try {
@@ -197,6 +213,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
             'Queue returned no rounds.',
             selectedMode: _selectedMode,
             selectedDifficulty: _selectedDifficulty,
+            backgroundArtEnabled: _backgroundArtEnabled,
           ),
         );
         return;
@@ -207,6 +224,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           _currentRound!,
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
       if (_queue.length <= 3) {
@@ -218,6 +236,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           'Error loading round: $e',
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
+          backgroundArtEnabled: _backgroundArtEnabled,
         ),
       );
     }
