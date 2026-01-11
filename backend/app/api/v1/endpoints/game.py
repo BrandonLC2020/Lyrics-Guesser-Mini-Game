@@ -1,3 +1,6 @@
+import logging
+from urllib.parse import quote
+
 import httpx
 from fastapi import APIRouter, HTTPException
 from thefuzz import fuzz
@@ -8,6 +11,7 @@ from app.core.utils import mask_text
 from app.schemas.game import GuessRequest, GuessResult, NewRoundResponse
 
 router = APIRouter(prefix="/game", tags=["game"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/new", response_model=NewRoundResponse)
@@ -17,29 +21,67 @@ async def start_new_round() -> NewRoundResponse:
     artist = ""
     title = ""
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         for _ in range(4):
+            logger.info("Selecting a new track for lyrics lookup.")
             selection = await get_random_song()
             artist = selection["artist"]
             title = selection["title"]
 
-            url = f"https://api.lyrics.ovh/v1/{artist}/{title}"
-            response = await client.get(url)
+            artist_path = quote(artist, safe="")
+            title_path = quote(title, safe="")
+            url = f"https://api.lyrics.ovh/v1/{artist_path}/{title_path}"
+            for attempt in range(1, 4):
+                logger.info(
+                    "Lyrics lookup attempt %s/3 for %s - %s (url=%s).",
+                    attempt,
+                    artist,
+                    title,
+                    url,
+                )
+                try:
+                    response = await client.get(url)
+                except httpx.HTTPError:
+                    logger.warning(
+                        "Lyrics request failed for %s - %s (attempt %s/3).",
+                        artist,
+                        title,
+                        attempt,
+                    )
+                    continue
 
-            if response.status_code != 200:
-                continue
+                if response.status_code != 200:
+                    logger.info(
+                        "Lyrics response status %s for %s - %s (attempt %s/3).",
+                        response.status_code,
+                        artist,
+                        title,
+                        attempt,
+                    )
+                    continue
 
-            data = response.json()
-            raw_lyrics = data.get("lyrics", "")
-            if not raw_lyrics:
-                continue
+                data = response.json()
+                raw_lyrics = data.get("lyrics", "")
+                if not raw_lyrics:
+                    logger.info(
+                        "Lyrics response empty for %s - %s (attempt %s/3).",
+                        artist,
+                        title,
+                        attempt,
+                    )
+                    continue
 
-            # Cleanup: API sometimes returns "Paroles de la chanson..." headers
-            clean_lyrics = raw_lyrics.replace(f"Paroles de la chanson {title}", "").strip()
+                # Cleanup: API sometimes returns "Paroles de la chanson..." headers
+                clean_lyrics = raw_lyrics.replace(f"Paroles de la chanson {title}", "").strip()
+                if clean_lyrics:
+                    logger.info("Lyrics found for %s - %s.", artist, title)
+                    break
+                logger.info("Lyrics cleanup produced empty text for %s - %s.", artist, title)
             if clean_lyrics:
                 break
 
     if not clean_lyrics:
+        logger.error("Lyrics provider failed after multiple tracks.")
         raise HTTPException(status_code=503, detail="Could not fetch lyrics provider.")
 
     # 3. Mask the lyrics
