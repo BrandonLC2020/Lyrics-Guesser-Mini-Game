@@ -1,4 +1,5 @@
 import logging
+import random
 from urllib.parse import quote
 
 import httpx
@@ -136,24 +137,49 @@ async def _build_round(
 
 @router.get("/new", response_model=NewRoundResponse)
 async def start_new_round(
-    mode: str = Query("artist", pattern="^(artist|track|lyrics)$"),
-    difficulty: str = Query("easy", pattern="^(easy|hard)$"),
+    mode: str = Query("artist", pattern="^(artist|track|lyrics|shuffle)$"),
+    difficulty: str = Query("easy", pattern="^(easy|hard|random)$"),
 ) -> NewRoundResponse:
     async with httpx.AsyncClient(timeout=10.0) as client:
-        return await _build_round(client, mode=mode, difficulty=difficulty)
+        actual_mode = mode if mode != "shuffle" else random.choice(["artist", "track", "lyrics"])
+        actual_difficulty = (
+            difficulty if difficulty != "random" else random.choice(["easy", "hard"])
+        )
+        return await _build_round(
+            client,
+            mode=actual_mode,
+            difficulty=actual_difficulty,
+        )
 
 
 @router.get("/queue", response_model=QueueResponse)
 async def get_round_queue(
     count: int = Query(7, ge=5, le=10, description="Number of rounds to enqueue."),
-    mode: str = Query("artist", pattern="^(artist|track|lyrics)$"),
-    difficulty: str = Query("easy", pattern="^(easy|hard)$"),
+    mode: str = Query("artist", pattern="^(artist|track|lyrics|shuffle)$"),
+    difficulty: str = Query("easy", pattern="^(easy|hard|random)$"),
 ) -> QueueResponse:
     async with httpx.AsyncClient(timeout=10.0) as client:
-        rounds = [
-            await _build_round(client, mode=mode, difficulty=difficulty)
-            for _ in range(count)
-        ]
+        rounds = []
+        attempts = 0
+        max_attempts = count * 3
+        while len(rounds) < count and attempts < max_attempts:
+            attempts += 1
+            round_mode = mode if mode != "shuffle" else random.choice(
+                ["artist", "track", "lyrics"]
+            )
+            round_difficulty = (
+                difficulty if difficulty != "random" else random.choice(["easy", "hard"])
+            )
+            try:
+                rounds.append(
+                    await _build_round(
+                        client,
+                        mode=round_mode,
+                        difficulty=round_difficulty,
+                    )
+                )
+            except HTTPException:
+                continue
     return QueueResponse(rounds=rounds)
 
 
@@ -168,6 +194,17 @@ async def submit_guess(request: GuessRequest) -> GuessResult:
         lyrics_answers = data.get("lyrics_answers", [])
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid or tampered game token.")
+
+    if request.give_up:
+        return GuessResult(
+            is_correct=False,
+            correct_artist=correct_artist,
+            correct_title=correct_title,
+            match_score=0,
+            message="The answer was:",
+            round_type=round_type,
+            correct_words=lyrics_answers if round_type == "lyrics" else [],
+        )
 
     if round_type in {"artist", "track"}:
         guess = request.user_guess

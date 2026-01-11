@@ -105,6 +105,24 @@ class GameScreen extends StatelessWidget {
           onSubmit: (guess) =>
               context.read<GameBloc>().add(GuessSubmitted(guess)),
         ),
+      const SizedBox(height: 16),
+      TextButton.icon(
+        onPressed: () => context.read<GameBloc>().add(const GameGiveUp()),
+        icon: const Icon(Icons.help_outline),
+        label: const Text("I don't know"),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.white.withOpacity(0.15),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
     ];
 
     return _buildResponsiveLayout(
@@ -219,18 +237,31 @@ class GameScreen extends StatelessWidget {
   }
 
   String _loadingStatus(GameMode mode, GameDifficulty difficulty) {
+    if (mode == GameMode.shuffle) {
+      return difficulty == GameDifficulty.hard
+          ? 'Shuffling a tougher mix...'
+          : difficulty == GameDifficulty.random
+              ? 'Rolling the shuffle...'
+              : 'Shuffling the mix...';
+    }
     if (mode == GameMode.lyrics) {
       return difficulty == GameDifficulty.hard
           ? 'Obscuring the lyrics...'
-          : 'Warming up the lyric sheet...';
+          : difficulty == GameDifficulty.random
+              ? 'Rolling the lyric blanks...'
+              : 'Warming up the lyric sheet...';
     }
     if (mode == GameMode.track) {
       return difficulty == GameDifficulty.hard
           ? 'Scrambling track hints...'
-          : 'Finding the track...';
+          : difficulty == GameDifficulty.random
+              ? 'Rolling the track clues...'
+              : 'Finding the track...';
     }
     return difficulty == GameDifficulty.hard
         ? 'Masking the artist trail...'
+        : difficulty == GameDifficulty.random
+            ? 'Rolling the artist trail...'
         : 'Finding the artist...';
   }
 }

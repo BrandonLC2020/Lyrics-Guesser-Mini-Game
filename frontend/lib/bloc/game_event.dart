@@ -31,6 +31,10 @@ class GuessSubmitted extends GameEvent {
   List<Object> get props => [guess];
 }
 
+class GameGiveUp extends GameEvent {
+  const GameGiveUp();
+}
+
 class NewRoundStarted extends GameEvent {}
 
 class QueueRefillRequested extends GameEvent {

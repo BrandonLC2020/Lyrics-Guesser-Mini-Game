@@ -31,6 +31,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<GameStarted>(_onGameStarted);
     on<GameModeSelected>(_onGameModeSelected);
     on<GuessSubmitted>(_onGuessSubmitted);
+    on<GameGiveUp>(_onGameGiveUp);
     on<NewRoundStarted>(_onNewRoundStarted);
     on<QueueRefillRequested>(_onQueueRefillRequested);
   }
@@ -126,6 +127,45 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       emit(
         GameError(
           'Error submitting guess: $e',
+          selectedMode: _selectedMode,
+          selectedDifficulty: _selectedDifficulty,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onGameGiveUp(
+    GameGiveUp event,
+    Emitter<GameState> emit,
+  ) async {
+    if (_currentRound == null) return;
+
+    emit(
+      GameLoading(
+        selectedMode: _selectedMode,
+        selectedDifficulty: _selectedDifficulty,
+      ),
+    );
+    try {
+      final roundMode = parseGameMode(_currentRound!.roundType);
+      final emptyGuess = roundMode == GameMode.lyrics ? <String>[] : '';
+      final result = await _api.submitGuess(
+        _currentRound!.gameToken,
+        emptyGuess,
+        giveUp: true,
+      );
+      emit(
+        GameGuessSubmitted(
+          result,
+          _currentRound!,
+          selectedMode: _selectedMode,
+          selectedDifficulty: _selectedDifficulty,
+        ),
+      );
+    } catch (e) {
+      emit(
+        GameError(
+          'Error surrendering: $e',
           selectedMode: _selectedMode,
           selectedDifficulty: _selectedDifficulty,
         ),

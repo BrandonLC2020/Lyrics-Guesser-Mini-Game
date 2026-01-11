@@ -44,13 +44,18 @@ class GameApi {
     }
   }
 
-  Future<GuessResult> submitGuess(String gameToken, Object userGuess) async {
+  Future<GuessResult> submitGuess(
+    String gameToken,
+    Object userGuess, {
+    bool giveUp = false,
+  }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/api/game/submit'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'game_token': gameToken,
         'user_guess': userGuess,
+        'give_up': giveUp,
       }),
     );
 

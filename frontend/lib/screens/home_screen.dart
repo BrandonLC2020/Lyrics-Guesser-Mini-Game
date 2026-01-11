@@ -126,6 +126,13 @@ class HomeScreen extends StatelessWidget {
         icon: Icons.edit_note,
         accent: palette.lyricsAccent,
       ),
+      _ModeCard(
+        mode: GameMode.shuffle,
+        title: 'Shuffle Play',
+        description: 'Random modes. Random challenges.',
+        icon: Icons.shuffle,
+        accent: palette.shuffleAccent,
+      ),
     ];
 
     return cards.map((card) {
@@ -171,7 +178,7 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Easy keeps the lyrics clearer. Hard hides more.',
+              'Easy keeps the lyrics clearer. Hard hides more. Random mixes it up.',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: 16,
                 color: palette.subtitle,
@@ -195,6 +202,19 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.bolt_outlined,
                     color: palette.hardAccent,
                     onTap: () => Navigator.pop(context, GameDifficulty.hard),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _DifficultyButton(
+                    label: 'Random',
+                    icon: Icons.casino_outlined,
+                    color: palette.randomAccent,
+                    onTap: () => Navigator.pop(context, GameDifficulty.random),
                   ),
                 ),
               ],
@@ -399,8 +419,10 @@ class _HomePalette {
   final Color artistAccent = const Color(0xFF6B3DF2);
   final Color trackAccent = const Color(0xFF0F9D8C);
   final Color lyricsAccent = const Color(0xFFE4692A);
+  final Color shuffleAccent = const Color(0xFFEA4C89);
   final Color easyAccent = const Color(0xFFFFD166);
   final Color hardAccent = const Color(0xFFFF8C6B);
+  final Color randomAccent = const Color(0xFF76B7FF);
   final Color orbTop = const Color(0xFF9AD0FF);
   final Color orbBottom = const Color(0xFFFFB997);
 }

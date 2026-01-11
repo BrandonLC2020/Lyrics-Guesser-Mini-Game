@@ -24,6 +24,7 @@ class QueueResponse(BaseModel):
 class GuessRequest(BaseModel):
     game_token: str
     user_guess: Union[str, list[str]]
+    give_up: bool = False
 
 
 class GuessResult(BaseModel):
