@@ -43,6 +43,8 @@ class HomeScreen extends StatelessWidget {
               LayoutBuilder(
                 builder: (context, constraints) {
                   final isWide = constraints.maxWidth > 720;
+                  final titleSize = isWide ? 44.0 : 32.0;
+                  final subtitleSize = isWide ? 18.0 : 16.0;
                   return Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1100),
@@ -54,7 +56,7 @@ class HomeScreen extends StatelessWidget {
                             Text(
                               'Lyrics Guesser',
                               style: GoogleFonts.dmSerifDisplay(
-                                fontSize: 44,
+                                fontSize: titleSize,
                                 color: palette.title,
                                 letterSpacing: 1.2,
                               ),
@@ -63,7 +65,7 @@ class HomeScreen extends StatelessWidget {
                             Text(
                               'Pick a mode. Raise the stakes. Guess the music.',
                               style: GoogleFonts.spaceGrotesk(
-                                fontSize: 18,
+                                fontSize: subtitleSize,
                                 color: palette.subtitle,
                               ),
                             ),
@@ -74,15 +76,33 @@ class HomeScreen extends StatelessWidget {
                                       children: _buildCards(
                                         context,
                                         palette,
-                                        axis: Axis.horizontal,
+                                        compact: false,
+                                        addPadding: true,
+                                        wrapExpanded: true,
                                       ),
                                     )
-                                  : ListView(
-                                      children: _buildCards(
-                                        context,
-                                        palette,
-                                        axis: Axis.vertical,
-                                      ),
+                                  : CustomScrollView(
+                                      slivers: [
+                                        SliverGrid(
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 16,
+                                            mainAxisSpacing: 16,
+                                            childAspectRatio: 0.78,
+                                          ),
+                                          delegate:
+                                              SliverChildListDelegate.fixed(
+                                            _buildCards(
+                                              context,
+                                              palette,
+                                              compact: true,
+                                              addPadding: false,
+                                              wrapExpanded: false,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                             ),
                           ],
@@ -102,7 +122,9 @@ class HomeScreen extends StatelessWidget {
   List<Widget> _buildCards(
     BuildContext context,
     _HomePalette palette, {
-    required Axis axis,
+    required bool compact,
+    required bool addPadding,
+    required bool wrapExpanded,
   }) {
     final cards = [
       _ModeCard(
@@ -140,18 +162,12 @@ class HomeScreen extends StatelessWidget {
         context,
         palette,
         onTap: () => _selectDifficulty(context, card.mode),
+        compact: compact,
       );
-      final padded = Padding(
-        padding: EdgeInsets.only(
-          right: axis == Axis.horizontal ? 16 : 0,
-          bottom: axis == Axis.vertical ? 16 : 0,
-        ),
-        child: content,
-      );
-      if (axis == Axis.horizontal) {
-        return Expanded(child: padded);
-      }
-      return padded;
+      final padded = addPadding
+          ? Padding(padding: const EdgeInsets.only(right: 16), child: content)
+          : content;
+      return wrapExpanded ? Expanded(child: padded) : padded;
     }).toList();
   }
 
@@ -161,6 +177,7 @@ class HomeScreen extends StatelessWidget {
       context: context,
       backgroundColor: palette.sheetBackground,
       isScrollControlled: true,
+      showDragHandle: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -338,7 +355,14 @@ class _ModeCard {
     BuildContext context,
     _HomePalette palette, {
     required VoidCallback onTap,
+    bool compact = false,
   }) {
+    final avatarRadius = compact ? 20.0 : 26.0;
+    final iconSize = compact ? 22.0 : 28.0;
+    final titleSize = compact ? 20.0 : 24.0;
+    final descriptionSize = compact ? 14.0 : 16.0;
+    final padding = compact ? 16.0 : 20.0;
+    final ctaSize = compact ? 12.0 : 14.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -358,28 +382,28 @@ class _ModeCard {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(padding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  radius: 26,
+                  radius: avatarRadius,
                   backgroundColor: accent.withOpacity(0.2),
-                  child: Icon(icon, color: accent, size: 28),
+                  child: Icon(icon, color: accent, size: iconSize),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: compact ? 12 : 16),
                 Text(
                   title,
                   style: GoogleFonts.dmSerifDisplay(
-                    fontSize: 24,
+                    fontSize: titleSize,
                     color: palette.title,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: compact ? 8 : 10),
                 Text(
                   description,
                   style: GoogleFonts.spaceGrotesk(
-                    fontSize: 16,
+                    fontSize: descriptionSize,
                     color: palette.subtitle,
                     height: 1.4,
                   ),
@@ -390,7 +414,7 @@ class _ModeCard {
                     Text(
                       'Tap to play',
                       style: GoogleFonts.spaceGrotesk(
-                        fontSize: 14,
+                        fontSize: ctaSize,
                         color: palette.ctaText,
                         fontWeight: FontWeight.w600,
                       ),
