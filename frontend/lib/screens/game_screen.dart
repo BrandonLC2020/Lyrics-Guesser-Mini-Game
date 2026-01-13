@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../app_theme.dart';
 import '../bloc/game_bloc.dart';
 import '../models/game_mode.dart';
 import '../networking/dto/new_round_response.dart';
@@ -93,7 +93,8 @@ class _GameScreenState extends State<GameScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.red,
+              backgroundColor: AppTheme.error,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -165,16 +166,8 @@ class _GameScreenState extends State<GameScreen> {
             fit: StackFit.expand,
             children: [
               Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.purple.shade400,
-                      Colors.blue.shade400,
-                      Colors.pink.shade300,
-                    ],
-                  ),
+                decoration: const BoxDecoration(
+                  gradient: AppGradients.primary,
                 ),
               ),
               if (showBackgroundArt) ...[
@@ -186,7 +179,7 @@ class _GameScreenState extends State<GameScreen> {
                 BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
                   child: Container(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withOpacity(0.4),
                   ),
                 ),
               ],
@@ -274,7 +267,7 @@ class _GameScreenState extends State<GameScreen> {
         label: const Text("I don't know"),
         style: TextButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.white.withOpacity(0.15),
+          backgroundColor: Colors.white.withOpacity(0.1),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -297,7 +290,7 @@ class _GameScreenState extends State<GameScreen> {
         label: const Text("I don't know"),
         style: TextButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: Colors.white.withOpacity(0.15),
+          backgroundColor: Colors.white.withOpacity(0.1),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -338,22 +331,7 @@ class _GameScreenState extends State<GameScreen> {
       ElevatedButton.icon(
         onPressed: () => context.read<GameBloc>().add(NewRoundStarted()),
         icon: const Icon(Icons.refresh),
-        label: const Text(
-          'New Round',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.purple.shade400,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 4,
-        ),
+        label: const Text('New Round'),
       ),
     ];
 
@@ -472,15 +450,14 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final theme = Theme.of(context);
     return Text(
       '🎵 Lyrics Guesser 🎵',
       textAlign: TextAlign.center,
-      style: GoogleFonts.dmSerifDisplay(
+      style: theme.textTheme.displayLarge?.copyWith(
         fontSize: isMobile ? 30 : 36,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
         shadows: [
-          Shadow(
+          const Shadow(
             blurRadius: 10.0,
             color: Colors.black26,
             offset: Offset(2.0, 2.0),
@@ -497,15 +474,10 @@ class _LyricsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -513,16 +485,14 @@ class _LyricsCard extends StatelessWidget {
               children: [
                 Icon(
                   Icons.music_note,
-                  color: Colors.purple.shade400,
+                  color: AppTheme.primaryPurple,
                   size: 28,
                 ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Lyrics',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                     color: Colors.white,
                   ),
                 ),
               ],
@@ -530,10 +500,10 @@ class _LyricsCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               lyrics,
-              style: GoogleFonts.spaceGrotesk(
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontSize: 18,
                 height: 1.6,
-                color: Colors.black87,
+                color: Colors.white70,
               ),
             ),
           ],
@@ -552,21 +522,20 @@ class _Hint extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.shade100,
+        color: AppTheme.warning.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade300, width: 2),
+        border: Border.all(color: AppTheme.warning.withOpacity(0.5), width: 1),
       ),
       child: Row(
         children: [
-          Icon(Icons.lightbulb, color: Colors.amber.shade800),
+          const Icon(Icons.lightbulb, color: AppTheme.warning),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 16,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.warning,
                 fontWeight: FontWeight.w600,
-                color: Colors.amber.shade900,
               ),
             ),
           ),
@@ -609,47 +578,48 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               widget.prompt,
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+              style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _guessController,
               decoration: InputDecoration(
                 hintText: widget.hint,
+                hintStyle: TextStyle(color: Colors.white30),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: Colors.purple.shade300, width: 2),
+                  borderSide: BorderSide(
+                    color: AppTheme.primaryPurple.withOpacity(0.5),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Colors.white24,
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: Colors.purple.shade400, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppTheme.primaryPurple,
+                    width: 2,
+                  ),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: Colors.black12,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
-              style: GoogleFonts.spaceGrotesk(fontSize: 18),
+              style: theme.textTheme.bodyLarge,
               textCapitalization: TextCapitalization.words,
               onSubmitted: (_) => _submitGuess(),
             ),
@@ -659,15 +629,6 @@ class _GuessInputSectionState extends State<_GuessInputSection> {
                 final isLoading = state is GameLoading;
                 return ElevatedButton(
                   onPressed: isLoading ? null : _submitGuess,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple.shade400,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
-                  ),
                   child: isLoading
                       ? const SizedBox(
                           height: 20,
@@ -701,18 +662,17 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = result.isCorrect ? AppTheme.success : AppTheme.error;
+    
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: result.isCorrect ? Colors.green.shade50 : Colors.red.shade50,
-          borderRadius: BorderRadius.circular(16),
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: result.isCorrect
-                ? Colors.green.shade300
-                : Colors.red.shade300,
+            color: color.withOpacity(0.5),
             width: 2,
           ),
         ),
@@ -721,19 +681,13 @@ class _ResultCard extends StatelessWidget {
             Icon(
               result.isCorrect ? Icons.check_circle : Icons.cancel,
               size: 64,
-              color: result.isCorrect
-                  ? Colors.green.shade600
-                  : Colors.red.shade600,
+              color: color,
             ),
             const SizedBox(height: 16),
             Text(
               result.message,
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: result.isCorrect
-                    ? Colors.green.shade800
-                    : Colors.red.shade800,
+              style: theme.textTheme.displayMedium?.copyWith(
+                color: color,
               ),
               textAlign: TextAlign.center,
             ),
@@ -743,11 +697,7 @@ class _ResultCard extends StatelessWidget {
                 children: [
                   Text(
                     'Correct words:',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 18,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: theme.textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -757,7 +707,10 @@ class _ResultCard extends StatelessWidget {
                     children: result.correctWords
                         .map(
                           (word) => Chip(
-                            label: Text(word),
+                            label: Text(
+                              word,
+                              style: const TextStyle(color: Colors.black87),
+                            ),
                             backgroundColor: Colors.white,
                           ),
                         )
@@ -768,20 +721,13 @@ class _ResultCard extends StatelessWidget {
             else
               Text(
                 'Correct answer: ${mode == GameMode.track ? result.correctTitle : result.correctArtist}',
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 20,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: theme.textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
             const SizedBox(height: 8),
             Text(
               'Match score: ${result.matchScore}%',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 16,
-                color: Colors.black54,
-              ),
+              style: theme.textTheme.bodyMedium,
             ),
           ],
         ),
@@ -810,114 +756,128 @@ class _LyricsFillCard extends StatefulWidget {
 class _LyricsFillCardState extends State<_LyricsFillCard> {
   @override
   Widget build(BuildContext context) {
-    final blankLookup = {
-      for (final blank in widget.round.blanksMetadata) blank.key: blank.length
-    };
-    final blankIndexLookup = {
-      for (var i = 0; i < widget.round.blanksMetadata.length; i++)
-        widget.round.blanksMetadata[i].key: i
-    };
-    final parts = <InlineSpan>[];
-    final pattern = RegExp(r'\[BLANK_(\d+)\]');
-    final text = widget.round.maskedLyrics;
-    int cursor = 0;
-
-    for (final match in pattern.allMatches(text)) {
-      if (match.start > cursor) {
-        parts.add(
-          TextSpan(
-            text: text.substring(cursor, match.start),
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 18,
-              height: 1.6,
-              color: Colors.black87,
-            ),
-          ),
-        );
-      }
-
-      final key = 'BLANK_${match.group(1)}';
-      final length = blankLookup[key] ?? 6;
-      final guess = widget.guesses[key] ?? '';
-      final placeholderLength = length.clamp(3, 8).toInt();
-      final placeholder = List.filled(placeholderLength, '_').join();
-      final selected = widget.selectedKey == key;
-      final index = blankIndexLookup[key] ?? -1;
-      parts.add(
-        WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: _LyricsBlankChip(
-              label: guess.isEmpty ? placeholder : guess,
-              selected: selected,
-              onTap: index < 0 ? null : () => widget.onSelectBlank(index),
-            ),
-          ),
-        ),
-      );
-      cursor = match.end;
-    }
-
-    if (cursor < text.length) {
-      parts.add(
-        TextSpan(
-          text: text.substring(cursor),
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 18,
-            height: 1.6,
-            color: Colors.black87,
-          ),
-        ),
-      );
-    }
+    final theme = Theme.of(context);
+    final parts = _parseLyrics(widget.round.maskedLyrics);
 
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+        width: double.infinity,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.music_note,
-                  color: Colors.orange.shade400,
-                  size: 28,
-                ),
+                Icon(Icons.edit_note, color: AppTheme.accentOrange, size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  'Fill the lyrics',
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                  'Fill the Blanks',
+                  style: theme.textTheme.headlineSmall,
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            RichText(text: TextSpan(children: parts)),
-            const SizedBox(height: 16),
-            Text(
-              'Tap a blank to fill it in.',
-              style: GoogleFonts.spaceGrotesk(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black54,
-              ),
+            Wrap(
+              spacing: 4,
+              runSpacing: 8,
+              children: parts.map((part) {
+                if (part.isBlank) {
+                  final isSelected = part.key == widget.selectedKey;
+                  final hasGuess = widget.guesses[part.key]?.isNotEmpty == true;
+                  return GestureDetector(
+                    onTap: () {
+                      final index = widget.round.blanksMetadata
+                          .indexWhere((b) => b.key == part.key);
+                      if (index != -1) {
+                        widget.onSelectBlank(index);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppTheme.accentOrange.withOpacity(0.3)
+                            : hasGuess
+                                ? AppTheme.primaryPurple.withOpacity(0.2)
+                                : Colors.white10,
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isSelected
+                                ? AppTheme.accentOrange
+                                : hasGuess
+                                    ? AppTheme.primaryPurple
+                                    : Colors.white30,
+                            width: 2,
+                          ),
+                        ),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        hasGuess ? widget.guesses[part.key]! : '_____',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: hasGuess ? Colors.white : Colors.white38,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return Text(
+                  part.text,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                     fontSize: 18,
+                     height: 1.6,
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),
       ),
     );
   }
+
+  List<_LyricsPart> _parseLyrics(String text) {
+    final parts = <_LyricsPart>[];
+    final pattern = RegExp(r'\[BLANK_(\d+)\]');
+    int cursor = 0;
+
+    for (final match in pattern.allMatches(text)) {
+      if (match.start > cursor) {
+        parts.add(_LyricsPart(
+          text: text.substring(cursor, match.start),
+          isBlank: false,
+          key: '',
+        ));
+      }
+
+      final key = 'BLANK_${match.group(1)}';
+      parts.add(_LyricsPart(
+        text: '', // Placeholder text is handled in build
+        isBlank: true,
+        key: key,
+      ));
+      cursor = match.end;
+    }
+
+    if (cursor < text.length) {
+      parts.add(_LyricsPart(
+        text: text.substring(cursor),
+        isBlank: false,
+        key: '',
+      ));
+    }
+    
+    return parts;
+  }
+}
+
+class _LyricsPart {
+  final String text;
+  final bool isBlank;
+  final String key;
+  _LyricsPart({required this.text, required this.isBlank, required this.key});
 }
 
 class _GuessInputBar extends StatefulWidget {
@@ -939,160 +899,66 @@ class _GuessInputBarState extends State<_GuessInputBar> {
   final TextEditingController _controller = TextEditingController();
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final value = _controller.text.trim();
-    if (value.isEmpty) return;
-    HapticFeedback.lightImpact();
-    widget.onSubmit(value);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(16, 12, 16, viewInsets + 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                widget.prompt,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: widget.hint,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.purple.shade300,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.purple.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
-                      style: GoogleFonts.spaceGrotesk(fontSize: 16),
-                      textCapitalization: TextCapitalization.words,
-                      onSubmitted: (_) => _submit(),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  BlocBuilder<GameBloc, GameState>(
-                    builder: (context, state) {
-                      final isLoading = state is GameLoading;
-                      return ElevatedButton(
-                        onPressed: isLoading ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.shade400,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Guess',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16) + MediaQuery.of(context).viewInsets,
+      decoration: const BoxDecoration(
+        color: Color(0xFF1E1E2C), // Surface color
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [BoxShadow(blurRadius: 20, color: Colors.black45)],
       ),
-    );
-  }
-}
-
-class _LyricsBlankChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  const _LyricsBlankChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? Colors.orange.shade400 : Colors.orange.shade100;
-    final borderColor =
-        selected ? Colors.orange.shade600 : Colors.orange.shade300;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor, width: 1.5),
-          ),
-          child: Text(
-            label,
-            style: GoogleFonts.spaceGrotesk(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+             Text(
+                widget.prompt,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+             ),
+             const SizedBox(height: 12),
+             Row(
+               children: [
+                 Expanded(
+                   child: TextField(
+                     controller: _controller,
+                     style: const TextStyle(color: Colors.white),
+                     decoration: InputDecoration(
+                       hintText: widget.hint,
+                       hintStyle: const TextStyle(color: Colors.white38),
+                       filled: true,
+                       fillColor: Colors.white10,
+                       border: OutlineInputBorder(
+                         borderRadius: BorderRadius.circular(12),
+                         borderSide: BorderSide.none,
+                       ),
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                     ),
+                     onSubmitted: (value) {
+                       if (value.trim().isNotEmpty) {
+                         widget.onSubmit(value.trim());
+                         _controller.clear();
+                       }
+                     },
+                   ),
+                 ),
+                 const SizedBox(width: 12),
+                 IconButton.filled(
+                   onPressed: () {
+                      if (_controller.text.trim().isNotEmpty) {
+                         widget.onSubmit(_controller.text.trim());
+                         _controller.clear();
+                      }
+                   },
+                   icon: const Icon(Icons.send_rounded),
+                   style: IconButton.styleFrom(
+                     backgroundColor: AppTheme.primaryPurple,
+                     foregroundColor: Colors.white,
+                   ),
+                 ),
+               ],
+             ),
+          ],
         ),
       ),
     );
@@ -1120,117 +986,56 @@ class _LyricsInputToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
-    final label = total == 0
-        ? 'No blanks'
-        : 'Blank ${selectedIndex + 1} of $total';
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(16, 12, 16, viewInsets + 16),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.spaceGrotesk(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+    return Container(
+      padding: const EdgeInsets.all(12) + MediaQuery.of(context).viewInsets,
+      decoration: const BoxDecoration(
+        color: Color(0xFF1E1E2C),
+        border: Border(top: BorderSide(color: Colors.white10)),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: onPrev,
+              icon: const Icon(Icons.chevron_left, color: Colors.white),
+            ),
+            Text(
+              '${selectedIndex + 1} / $total',
+              style: const TextStyle(color: Colors.white70, fontFeatures: [FontFeature.tabularFigures()]),
+            ),
+            IconButton(
+              onPressed: onNext,
+              icon: const Icon(Icons.chevron_right, color: Colors.white),
+            ),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Type word...',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  filled: true,
+                  fillColor: Colors.white10,
+                  isDense: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
+                textInputAction: TextInputAction.next,
+                onSubmitted: (_) => onNext(),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: total == 0 ? null : onPrev,
-                    icon: const Icon(Icons.chevron_left),
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        hintText: 'Type missing lyric...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.orange.shade300,
-                            width: 2,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.orange.shade400,
-                            width: 2,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
-                        ),
-                      ),
-                      style: GoogleFonts.spaceGrotesk(fontSize: 16),
-                      textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => onSubmit(),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: total == 0 ? null : onNext,
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                  const SizedBox(width: 8),
-                  BlocBuilder<GameBloc, GameState>(
-                    builder: (context, state) {
-                      final isLoading = state is GameLoading;
-                      return ElevatedButton(
-                        onPressed: isLoading ? null : onSubmit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange.shade400,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Submit',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: onSubmit,
+              child: const Text('Submit'),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+
