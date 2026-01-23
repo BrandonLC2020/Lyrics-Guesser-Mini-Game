@@ -3,14 +3,12 @@ import '../../models/game_mode.dart';
 import '../dto/new_round_response.dart';
 import '../dto/guess_result.dart';
 import '../dto/queue_response.dart';
+import '../extensions/dio_client.dart';
 
 class GameApi {
-  // Update this to match your backend URL
-  static const String baseUrl = 'http://localhost:8000';
-  
   final Dio _dio;
 
-  GameApi({Dio? dio}) : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl));
+  GameApi({Dio? dio}) : _dio = dio ?? DioClient.dio;
 
   Future<NewRoundResponse> startNewRound({
     required GameMode mode,
