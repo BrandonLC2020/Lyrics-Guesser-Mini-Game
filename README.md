@@ -1,148 +1,97 @@
+
 # Lyrics Guesser Mini Game
 
-A full-stack cross-platform game where players test their musical knowledge by guessing artists, track titles, or filling in missing lyrics. The project features a robust Python FastAPI backend that dynamically sources songs from external music APIs and a polished Flutter frontend for mobile and web.
+A fun and interactive mini-game that tests your knowledge of song lyrics.
 
-## 🚀 Features
+## Description
 
-* **Multiple Game Modes:**
-* **Guess the Artist:** Identify the artist based on a snippet of lyrics.
-* **Guess the Track:** Name the song title from the provided lyrics.
-* **Fill the Lyrics:** Complete the missing words in a line of lyrics.
-* **Shuffle Mode:** A random mix of all game modes.
+This is a full-stack application with a Flutter frontend and a Python backend. The backend serves a RESTful API that provides song lyrics, and the frontend is a mobile application that allows users to play the game.
 
+The game is simple: you are given a snippet of lyrics and you have to guess the song title and artist. The more you guess correctly, the higher your score.
 
-* **Dynamic Content:** Real-time fetching of trending and top songs using **Deezer** and **iTunes** APIs.
-* **Lyrics Integration:** Lyrics retrieval via the **Lyrics.ovh** API.
-* **Difficulty Levels:**
-* **Easy:** Standard masking for lyrics; lenient fuzzy matching.
-* **Hard:** Higher percentage of masked lyrics.
-* **Random:** Unpredictable difficulty.
-
-
-* **Smart Scoring:** Uses **Fuzzy Matching** (via `thefuzz`) to accept close spellings for artist and track names.
-* **Secure Gameplay:** Game state is secured using signed tokens (JWT-like implementation with `itsdangerous`) to prevent client-side cheating.
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 
-* **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.14+)
-* **Dependency Management:** [Poetry](https://python-poetry.org/)
-* **Key Libraries:**
-* `httpx`: For asynchronous external API requests.
-* `thefuzz`: For fuzzy string matching on user guesses.
-* `itsdangerous`: For cryptographically signing game tokens.
-* `uvicorn`: ASGI server implementation.
+- **Python**: The core backend language.
+- **FastAPI**: A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
+- **SQLAlchemy**: The SQL toolkit and Object Relational Mapper for Python.
+- **Poetry**: A tool for dependency management and packaging in Python.
+- **Deezer and iTunes APIs**: The backend seems to use these APIs to fetch song data.
 
+#### Dependencies
 
+- **fastapi**: >=0.128.0,<0.129.0
+- **uvicorn**: >=0.40.0,<0.41.0
+- **httpx**: >=0.28.1,<0.29.0
+- **thefuzz**: >=0.22.1,<0.23.0
+- **itsdangerous**: >=2.2.0,<3.0.0
+- **python-multipart**: >=0.0.21,<0.0.22
 
 ### Frontend
 
-* **Framework:** [Flutter](https://flutter.dev/) (Dart 3.9+)
-* **State Management:** [Bloc / Flutter Bloc](https://pub.dev/packages/flutter_bloc)
-* **Networking:** `http` and `dio`
-* **Design:** Material 3 with `google_fonts`.
+- **Flutter**: Google's UI toolkit for building natively compiled applications for mobile, web, and desktop from a single codebase.
+- **Dart**: The language used for Flutter development.
+- **BLoC**: A predictable state management library for Dart.
 
-## 📂 Project Structure
+#### Dependencies
 
-```text
-.
-├── backend/
-│   ├── app/
-│   │   ├── api/v1/         # API Route definitions
-│   │   ├── core/           # Config, Security, and API clients (Deezer, iTunes)
-│   │   ├── models/         # Pydantic models (implied)
-│   │   └── main.py         # Application entry point
-│   └── pyproject.toml      # Backend dependencies and config
-├── frontend/
-│   ├── lib/
-│   │   ├── bloc/           # Game state management (Bloc pattern)
-│   │   ├── models/         # Data models (GameMode, GameDifficulty)
-│   │   ├── networking/     # API services
-│   │   ├── screens/        # UI Screens (Home, Game)
-│   │   └── main.dart       # App entry point
-│   └── pubspec.yaml        # Frontend dependencies
-└── README.md
+- **flutter_bloc**: ^9.1.1
+- **equatable**: ^2.0.5
+- **dio**: ^5.9.0
+- **google_fonts**: ^6.2.1
 
+## Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph Frontend
+        A[Flutter] --> B{BLoC};
+        B --> C[API Client];
+    end
+
+    subgraph Backend
+        D[FastAPI] --> E[SQLAlchemy];
+        D --> F[Deezer API];
+        D --> G[iTunes API];
+    end
+
+    C --> D;
 ```
 
-## ⚡ Getting Started
+## Getting Started
 
 ### Prerequisites
 
-* Python 3.14 or higher
-* Flutter SDK (v3.29.0 or compatible)
-* Poetry (for Python dependency management)
+- Flutter
+- Python 3.7+
+- Poetry
 
 ### Backend Setup
 
-1. Navigate to the backend directory:
-```bash
-cd backend
-
-```
-
-
-2. Install dependencies:
-```bash
-poetry install
-
-```
-
-
-3. Run the server:
-```bash
-poetry run uvicorn app.main:app --reload
-
-```
-
-
-The API will be available at `http://127.0.0.1:8000`. You can view the automatic documentation at `http://127.0.0.1:8000/docs`.
+1.  Navigate to the `backend` directory.
+2.  Install dependencies: `poetry install`
+3.  Run the development server: `poetry run uvicorn app.main:app --reload`
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
-```bash
-cd frontend
+1.  Navigate to the `frontend` directory.
+2.  Install dependencies: `flutter pub get`
+3.  Run the app: `flutter run`
 
-```
+## Features
 
+- Guess the song title and artist from a snippet of lyrics.
+- Keep track of your score.
+- Multiple game modes.
 
-2. Install Flutter dependencies:
-```bash
-flutter pub get
+## Future Improvements
 
-```
+- Add more game modes.
+- Add a leaderboard to compare scores with other players.
+- Add user authentication and profiles.
+- Improve the UI/UX.
 
+## License
 
-3. Run the application:
-```bash
-flutter run
-
-```
-
-
-
-## 📡 API Endpoints
-
-The backend exposes several endpoints under the `/api/game` prefix:
-
-* **GET** `/api/game/new`: Starts a single new game round.
-* **Params:** `mode` (artist, track, lyrics, shuffle), `difficulty` (easy, hard, random).
-* **Returns:** A secure `game_token`, masked lyrics, and hint metadata.
-
-
-* **GET** `/api/game/queue`: Fetches a queue of multiple rounds (useful for continuous play).
-* **POST** `/api/game/submit`: Submits a user's guess.
-* **Body:** `game_token`, `user_guess`.
-* **Returns:** Success status, score, correct answer, and updated game state.
-
-
-
-## 🛡️ Security
-
-The application uses a stateless security model. When a game round is created, the correct answer is embedded into a cryptographically signed token (`game_token`) sent to the client. When the client submits a guess, they must return this token. The backend verifies the signature and decodes the token to check the answer, ensuring users cannot simply inspect network traffic to find the solution.
-
-## 📄 License
-
-MIT License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

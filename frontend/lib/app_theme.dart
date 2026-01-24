@@ -8,7 +8,7 @@ class AppTheme {
   static const Color accentPink = Color(0xFFEA4C89);
   static const Color accentOrange = Color(0xFFE4692A);
   static const Color accentBlue = Color(0xFF76B7FF);
-  
+
   // Semantic Colors
   static const Color success = Color(0xFF4CAF50);
   static const Color error = Color(0xFFE53935);
@@ -72,9 +72,52 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: const Color(0xFF2C2C3E),
         elevation: 8,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        margin: EdgeInsets.zero,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.black12,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
         ),
+        hintStyle: GoogleFonts.spaceGrotesk(color: Colors.white30),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryPurple.withValues(alpha: 0.5)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white24),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryPurple, width: 2),
+        ),
+        labelStyle: GoogleFonts.spaceGrotesk(color: Colors.white70),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          textStyle: GoogleFonts.spaceGrotesk(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.white,
+        labelStyle: GoogleFonts.spaceGrotesk(
+          color: const Color(0xFF1E1E2C), // Dark background color for contrast
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );
   }
@@ -93,18 +136,12 @@ class AppGradients {
   static const LinearGradient accent = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF6B3DF2),
-      Color(0xFFB06AB3),
-    ],
+    colors: [Color(0xFF6B3DF2), Color(0xFFB06AB3)],
   );
-  
+
   static LinearGradient glass = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Colors.white10,
-      Colors.white.withValues(alpha: 0.05),
-    ],
+    colors: [Colors.white10, Colors.white.withValues(alpha: 0.05)],
   );
 }

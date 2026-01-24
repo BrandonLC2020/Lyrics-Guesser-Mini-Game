@@ -14,9 +14,7 @@ class HomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppGradients.primary,
-        ),
+        decoration: const BoxDecoration(gradient: AppGradients.primary),
         child: SafeArea(
           child: Stack(
             children: [
@@ -67,37 +65,19 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 32),
                             Expanded(
-                              child: isWide
-                                  ? Row(
-                                      children: _buildCards(
-                                        context,
-                                        compact: false,
-                                        addPadding: true,
-                                        wrapExpanded: true,
-                                      ),
-                                    )
-                                  : CustomScrollView(
-                                      slivers: [
-                                        SliverGrid(
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            crossAxisSpacing: 16,
-                                            mainAxisSpacing: 16,
-                                            childAspectRatio: 0.8,
-                                          ),
-                                          delegate:
-                                              SliverChildListDelegate.fixed(
-                                            _buildCards(
-                                              context,
-                                              compact: true,
-                                              addPadding: false,
-                                              wrapExpanded: false,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                              child: GridView.count(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: isWide ? 1.6 : 0.8,
+                                padding: EdgeInsets.zero,
+                                children: _buildCards(
+                                  context,
+                                  compact: !isWide,
+                                  addPadding: false,
+                                  wrapExpanded: false,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -177,12 +157,7 @@ class HomeScreen extends StatelessWidget {
     );
 
     if (result != null && context.mounted) {
-      _startGame(
-        context,
-        mode,
-        result.difficulty,
-        result.backgroundArtEnabled,
-      );
+      _startGame(context, mode, result.difficulty, result.backgroundArtEnabled);
     }
   }
 
@@ -195,19 +170,15 @@ class HomeScreen extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BlocProvider(
-          create: (_) => GameBloc(
-            GameApi(),
-            initialMode: mode,
-            initialDifficulty: difficulty,
-            backgroundArtEnabled: backgroundArtEnabled,
-          )
-            ..add(
-              GameModeSelected(
-                mode: mode,
-                difficulty: difficulty,
-              ),
-            )
-            ..add(GameStarted()),
+          create: (_) =>
+              GameBloc(
+                  GameApi(),
+                  initialMode: mode,
+                  initialDifficulty: difficulty,
+                  backgroundArtEnabled: backgroundArtEnabled,
+                )
+                ..add(GameModeSelected(mode: mode, difficulty: difficulty))
+                ..add(GameStarted()),
           child: const GameScreen(),
         ),
       ),
@@ -342,7 +313,7 @@ class _ModeCard {
     final descriptionSize = compact ? 14.0 : 16.0;
     final padding = compact ? 16.0 : 24.0;
     final ctaSize = compact ? 12.0 : 14.0;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -352,10 +323,13 @@ class _ModeCard {
           decoration: BoxDecoration(
             color: theme.cardTheme.color,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: accent.withOpacity(0.4), width: 1.5),
+            border: Border.all(
+              color: accent.withValues(alpha: 0.4),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 16,
                 offset: const Offset(0, 8),
               ),
@@ -400,8 +374,7 @@ class _ModeCard {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Icon(Icons.arrow_forward_rounded,
-                        size: 16, color: accent),
+                    Icon(Icons.arrow_forward_rounded, size: 16, color: accent),
                   ],
                 ),
               ],
@@ -432,17 +405,17 @@ class _DifficultyButton extends StatelessWidget {
       onPressed: onTap,
       icon: Icon(icon),
       label: Text(label),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      style:
+          ElevatedButton.styleFrom(
+            backgroundColor: color,
+            // foregroundColor handled by theme or default
+            // padding handled by theme
+            // shape handled by theme
+            // textStyle handled by theme
+          ).copyWith(
+            // Override specifically for difficulty buttons if they need unique colors
+            backgroundColor: WidgetStateProperty.all(color),
+          ),
     );
   }
 }
@@ -460,12 +433,7 @@ class _GlowOrb extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            color,
-            color.withOpacity(0.0),
-          ],
-        ),
+        gradient: RadialGradient(colors: [color, color.withOpacity(0.0)]),
       ),
     );
   }
