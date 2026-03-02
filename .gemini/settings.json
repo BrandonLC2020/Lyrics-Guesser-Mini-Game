@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "name": "flutter-backend-health",
+        "type": "command",
+        "command": "bash .gemini/hooks/flutter-backend-health.sh",
+        "timeout": 5000
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "write_file|replace",
+        "hooks": [
+          {
+            "name": "post-schema-change",
+            "type": "command",
+            "command": "bash .gemini/hooks/post-schema-change.sh",
+            "timeout": 5000
+          },
+          {
+            "name": "game-balance-check",
+            "type": "command",
+            "command": "bash .gemini/hooks/game-balance-check.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "tracks": {
+    "data": [
+      {
+        "id": 1,
+        "title": "Rolling in the Deep",
+        "artist": {
+          "id": 1,
+          "name": "Adele"
+        },
+        "album": {
+          "id": 1,
+          "title": "21",
+          "cover_medium": "https://api.deezer.com/album/1/image"
+        }
+      },
+      {
+        "id": 2,
+        "title": "Blinding Lights",
+        "artist": {
+          "id": 2,
+          "name": "The Weeknd"
+        },
+        "album": {
+          "id": 2,
+          "title": "After Hours",
+          "cover_medium": "https://api.deezer.com/album/2/image"
+        }
+      }
+    ]
+  }
+}
