@@ -1,0 +1,9 @@
+__pycache__
+.venv
+.git
+.gitignore
+README.md
+Dockerfile
+deploy.sh
+requirements.txt
+tests
