@@ -19,19 +19,26 @@
     {
       "layers" : [
         {
-          "image-name" : "Lyric Guesser Foreground.png",
-          "name" : "Lyric Guesser Foreground",
+          "image-name" : "Lyric Guesser Foreground 3.png",
+          "name" : "Lyric Guesser Foreground 3",
           "position" : {
             "scale" : 1,
             "translation-in-points" : [
               -16,
-              -49.5546875
+              -45.8984375
             ]
           }
         },
         {
           "image-name" : "Lyric Guesser Background.png",
-          "name" : "Lyric Guesser Background"
+          "name" : "Lyric Guesser Background",
+          "position" : {
+            "scale" : 1,
+            "translation-in-points" : [
+              0,
+              -16.1015625
+            ]
+          }
         }
       ],
       "shadow" : {

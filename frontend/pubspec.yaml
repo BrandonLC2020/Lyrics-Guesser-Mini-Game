@@ -69,10 +69,14 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/LyricsGuesser-GlassIcon.png
+  remove_alpha_ios: true
+  image_path: assets/GlassIcon-iOS-Default-1024x1024@1x.png
+  macos:
+    generate: true
+    image_path: assets/GlassIcon-iOS-Default-1024x1024@1x.png
   web:
     generate: true
-    image_path: assets/LyricsGuesser-GlassIcon.png
+    image_path: assets/GlassIcon-iOS-Default-1024x1024@1x.png
     background_color: "#FFFFFF"
     theme_color: "#FFFFFF"
 
